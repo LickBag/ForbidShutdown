@@ -132,8 +132,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             IconData.cbSize = sizeof(NOTIFYICONDATA);
             IconData.hWnd = (HWND)hWnd;
             IconData.uFlags = NIF_INFO;
-            lstrcpy(IconData.szInfo, _T("111"));
-            lstrcpy(IconData.szInfoTitle,  _T("222"));
+            lstrcpy(IconData.szInfo, _T("别点我, 好痛~"));
+            lstrcpy(IconData.szInfoTitle,  _T("嘤嘤嘤~"));
             Shell_NotifyIcon(NIM_MODIFY, &IconData);
             return 0;
         }
