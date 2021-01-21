@@ -27,12 +27,18 @@
     <ClInclude Include="CKeepAwake.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="boot.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ForbidShutDown.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="CKeepAwake.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="boot.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

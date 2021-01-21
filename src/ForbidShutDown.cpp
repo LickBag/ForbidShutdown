@@ -2,6 +2,7 @@
 #include "Resource.h"
 #include <shellapi.h>
 #include "CKeepAwake.h"
+#include "boot.h"
 
 #define MAX_LOADSTRING 100
 #define UM_TRAY_NOTIFY (WM_USER + WM_USER)
@@ -118,11 +119,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             if (hMenu)
             {
                 HMENU hSubMenu = GetSubMenu(hMenu, 0);
-                if (hSubMenu) {
-                    SetForegroundWindow(hWnd); // 避免菜单弹出后, 如果不点击则不消失的问题。
+                if (hSubMenu) 
+				{
+					// 勾选开机启动菜单
+					if (IsBootUp())
+					{
+						CheckMenuItem(hMenu, IDM_BOOT_UP, MF_BYCOMMAND | MF_CHECKED);
+					}
+                    
+					SetForegroundWindow(hWnd); // 避免菜单弹出后, 如果不点击则不消失的问题。
                     TrackPopupMenu(hSubMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_BOTTOMALIGN, lpClickPoint.x, lpClickPoint.y, 0, hWnd, NULL);
                 }
                 DestroyMenu(hMenu);
+				hMenu = NULL;
             }
         }
 
@@ -146,6 +155,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             PostMessage(hWnd, WM_DESTROY, 0, 0);
         }
+		else if (LOWORD(wParam) == IDM_BOOT_UP)
+		{
+			bool bBookUp = IsBootUp();
+			SetBootUp(!bBookUp);
+		}
 		else if (LOWORD(wParam) == IDM_LINK)
 		{
 			system("rundll32 url.dll,FileProtocolHandler https://github.com/zhaochaohui");
