@@ -8,7 +8,7 @@
 #define UM_TRAY_NOTIFY (WM_USER + WM_USER)
 #define UM_END 0xBFFE
 
-HINSTANCE hInst = NULL;                                // 当前实例
+HINSTANCE hInst = nullptr;                             // 当前实例
 WCHAR szTitle[MAX_LOADSTRING] = { L"ForbidShutDown" }; // 标题栏文本
 WCHAR szWindowClass[MAX_LOADSTRING] = { L"ForbidShutDown" }; // 主窗口类名
 CKeepAwake* g_pKeepAwake = nullptr;
@@ -26,7 +26,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(lpCmdLine);
 
     // 保证单例
-    auto h = ::CreateEvent(NULL, FALSE, TRUE, _T("52E6F1E6-26CB-4182-BC0F-60EA520B0EA3"));
+    auto h = ::CreateEvent(nullptr, FALSE, TRUE, _T("52E6F1E6-26CB-4182-BC0F-60EA520B0EA3"));
     auto err = GetLastError();
     if (err == ERROR_ALREADY_EXISTS)
     {
@@ -61,7 +61,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_FORBIDSHUTDOWN));
     wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
     wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    wcex.lpszMenuName = NULL;// MAKEINTRESOURCEW(IDC_FORBIDSHUTDOWN);
+    wcex.lpszMenuName = nullptr;// MAKEINTRESOURCEW(IDC_FORBIDSHUTDOWN);
     wcex.lpszClassName = szWindowClass;
     wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_FORBIDSHUTDOWN));
 
@@ -131,7 +131,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     TrackPopupMenu(hSubMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_BOTTOMALIGN, lpClickPoint.x, lpClickPoint.y, 0, hWnd, NULL);
                 }
                 DestroyMenu(hMenu);
-				hMenu = NULL;
+				hMenu = nullptr;
             }
         }
 

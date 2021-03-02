@@ -3,7 +3,7 @@
 #include <xstring>
 using namespace std;
 
-WNDPROC g_oldWndProc = NULL;
+WNDPROC g_oldWndProc = nullptr;
 
 LRESULT CALLBACK MyWindowProc(HWND hWnd,
     UINT Msg,
@@ -54,9 +54,11 @@ CKeepAwake::CKeepAwake()
 
 CKeepAwake::~CKeepAwake()
 {
+
+
     RestoreScrSaver();
 
-    if (g_oldWndProc != NULL)
+    if (g_oldWndProc != nullptr)
     {
         ::SetWindowLongPtr(m_hWnd, GWLP_WNDPROC, (LONG_PTR)g_oldWndProc);
     }
@@ -77,7 +79,7 @@ void CKeepAwake::DisableScrSaver()
     SystemParametersInfo(SPI_GETSCREENSAVEACTIVE, 0, &m_bScrActive, 0);
     if (m_bScrActive)
     {
-        SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, FALSE, NULL, 0);
+        SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, FALSE, nullptr, 0);
     }
 }
 
@@ -86,7 +88,7 @@ void CKeepAwake::RestoreScrSaver()
 {
     if (m_bScrActive)
     {
-        SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, TRUE, NULL, 0);
+        SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, TRUE, nullptr, 0);
     }
 }
 
@@ -101,23 +103,27 @@ void CKeepAwake::SaveMonitorBrightness()
         {
             DWORD dwNumberOfPhysicalMonitors = 0;
             bRet = GetNumberOfPhysicalMonitorsFromHMONITOR(hMonitor, &dwNumberOfPhysicalMonitors);
-            if (!bRet) { strFunc = _T("GetNumberOfPhysicalMonitorsFromHMONITOR"); break; }
+            if (!bRet) { break; }
 
             m_pAryPhysicalMonitor = new PHYSICAL_MONITOR[dwNumberOfPhysicalMonitors];
             ZeroMemory(m_pAryPhysicalMonitor, sizeof(PHYSICAL_MONITOR) * dwNumberOfPhysicalMonitors);
             bRet = GetPhysicalMonitorsFromHMONITOR(hMonitor, dwNumberOfPhysicalMonitors, (LPPHYSICAL_MONITOR)m_pAryPhysicalMonitor);
-            if (!bRet) { strFunc = _T("GetPhysicalMonitorsFromHMONITOR"); break; }
+            if (!bRet) { break; }
 
             DWORD dwMinimumBrightness = 0, dwMaximumBrightness = 0;
             bRet = GetMonitorBrightness(((LPPHYSICAL_MONITOR)m_pAryPhysicalMonitor)[0].hPhysicalMonitor, &dwMinimumBrightness, &m_dwCurrentBrightness, &dwMaximumBrightness);
-            if (!bRet) { strFunc = _T("GetMonitorBrightness");break; }
+            if (!bRet) { break; }
 
-        } while (0);
+        } while (false);
 
         if (!bRet)
         {
             TCHAR* pStrError = GetErrorString();
-            MessageBox(m_hWnd, pStrError, strFunc.c_str()/* _T("控制屏幕亮度失败")*/, MB_OK);
+			if (m_pAryPhysicalMonitor != nullptr)
+			{
+				delete []m_pAryPhysicalMonitor;
+				m_pAryPhysicalMonitor = nullptr;
+			}
         }
     }
 }
@@ -126,12 +132,9 @@ void CKeepAwake::RestoreMonitorBrightness()
 {
     if (m_pAryPhysicalMonitor != nullptr)
     {
-        BOOL bRet = SetMonitorBrightness(((LPPHYSICAL_MONITOR)m_pAryPhysicalMonitor)[0].hPhysicalMonitor, m_dwCurrentBrightness);
-        if (!bRet)
-        {
-            TCHAR* pStrError = GetErrorString();
-            MessageBox(m_hWnd, pStrError, _T("控制屏幕亮度失败"), MB_OK);
-        }
+        SetMonitorBrightness(((LPPHYSICAL_MONITOR)m_pAryPhysicalMonitor)[0].hPhysicalMonitor, m_dwCurrentBrightness);
+		delete []m_pAryPhysicalMonitor;
+		m_pAryPhysicalMonitor = nullptr;
     }
 }
 
@@ -169,7 +172,7 @@ void CKeepAwake::Init(HWND hWnd)
         , &GUID_CONSOLE_DISPLAY_STATE, DEVICE_NOTIFY_WINDOW_HANDLE);
 
     // 取代原来的窗口过程
-    if (NULL == g_oldWndProc)
+    if (nullptr == g_oldWndProc)
     {
         g_oldWndProc = (WNDPROC)::SetWindowLongPtr(m_hWnd, GWLP_WNDPROC, (LONG_PTR)MyWindowProc);
     }
@@ -179,17 +182,12 @@ void CKeepAwake::Init(HWND hWnd)
 
     // 保存当前屏幕亮度
     SaveMonitorBrightness();
-
-    { //  销毁句柄
-        // DestroyPhysicalMonitors(cPhysicalMonitors, pPhysicalMonitors);
-        // delete pPhysicalMonitors;
-    }
 }
 
 TCHAR* CKeepAwake::GetErrorString()
 {
     DWORD dwError = GetLastError();
-    TCHAR* buffer = NULL;
+    TCHAR* buffer = nullptr;
     ::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, dwError, 0, (LPTSTR)&buffer, 0, NULL);
     return buffer;
 }

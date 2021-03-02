@@ -22,11 +22,11 @@ private:
 
 private:
     static CKeepAwake* m_pInstance;
-	EXECUTION_STATE m_oldState = NULL;
-	HWND			m_hWnd = NULL;
+	EXECUTION_STATE m_oldState = ES_CONTINUOUS;
+	HWND			m_hWnd = nullptr;
 	BOOL			m_bRet = FALSE;
 	BOOL			m_bScrActive = FALSE;
-	HPOWERNOTIFY    m_lvhpNotify = NULL;
+	HPOWERNOTIFY    m_lvhpNotify = nullptr;
     DWORD           m_dwCurrentBrightness = 50;
     VOID*           m_pAryPhysicalMonitor = nullptr;
 };
