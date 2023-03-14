@@ -27,7 +27,16 @@
     <ClInclude Include="CKeepAwake.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="boot.h">
+    <ClInclude Include="RegistryOperation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="OptimizeService.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Common.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RegistryConfig.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -38,7 +47,13 @@
     <ClCompile Include="CKeepAwake.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="boot.cpp">
+    <ClCompile Include="OptimizeService.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RegistryOperation.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RegistryConfig.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

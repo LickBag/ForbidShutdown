@@ -1,0 +1,10 @@
+*.tlog
+*.pdb
+*.obj
+*.ipch
+*.log
+*.aps
+.vs
+.git
+Debug
+Release
