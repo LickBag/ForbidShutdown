@@ -4,7 +4,7 @@
 #include "CKeepAwake.h"
 #include "RegistryConfig.h"
 #include "OptimizeService.h"
-
+#include "PowerLocker.h"
 
 
 // 添加MessageBoxTimeout支持
@@ -63,6 +63,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         return FALSE;
     }
 
+    LockBalancePower(true);
+
     MSG msg;
     while (GetMessage(&msg, nullptr, 0, 0))
     {
@@ -92,6 +94,10 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     return RegisterClassExW(&wcex);
 }
 
+
+
+
+
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
     hInst = hInstance; // 将实例句柄存储在全局变量中
@@ -103,6 +109,9 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     {
         return FALSE;
     }
+
+    // 注册电源设置的变更通知
+
 
     ShowWindow(hWnd, nCmdShow);
     UpdateWindow(hWnd);
@@ -162,6 +171,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         {
                             CheckMenuItem(hMenu, IDM_BLOCK_WINDOWS_UPDATE, MF_BYCOMMAND | MF_CHECKED);
                         }
+
+                        if (IsLockBalancePower())
+                        {
+                            CheckMenuItem(hMenu, IDM_LOCK_BALANCE_POWER, MF_BYCOMMAND | MF_CHECKED);
+                        }
                     
 					    SetForegroundWindow(hWnd); // 避免菜单弹出后, 如果不点击则不消失的问题。
                         TrackPopupMenu(hSubMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_BOTTOMALIGN, lpClickPoint.x, lpClickPoint.y, 0, hWnd, NULL);
@@ -215,6 +229,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     CancelOptimizeService();
                 }
             }
+            else if (LOWORD(wParam) == IDM_LOCK_BALANCE_POWER)
+            {
+                bool block = !IsLockBalancePower();
+                LockBalancePower(block);
+            }
             break;
         }
 
@@ -229,6 +248,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             Shell_NotifyIcon(NIM_DELETE, &IconData);
 
             PostQuitMessage(0);
+            break;
+        }
+
+        case WM_POWERBROADCAST:
+        {
             break;
         }
 
