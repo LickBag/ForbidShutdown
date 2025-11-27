@@ -8,6 +8,7 @@
 # Precompiled Headers
 *.gch
 *.pch
+*.aps
 
 # Libraries
 *.lib
