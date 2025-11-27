@@ -1,4 +1,5 @@
 #include "RegistryOperation.h"
+#include "RegistryConfig.h"
 #include <tchar.h>
 #include <shlwapi.h>
 #include "Common.h"
@@ -57,10 +58,6 @@ void LockBalancePower(bool bLock)
         UnregisterPowerSettingNotification(g_hNotificationRegister);
         g_hNotificationRegister = nullptr;
     }
-}
 
-
-bool IsLockBalancePower()
-{
-    return g_hNotificationRegister != nullptr;
+    RegSetKeepBalancePower(bLock);
 }

@@ -1,10 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="源文件">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
     <Filter Include="头文件">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
@@ -13,55 +9,70 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{1a39bf55-4b7d-460a-9a98-199c9a168f28}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="KeepAwake">
+      <UniqueIdentifier>{857498ff-0c5b-478c-b0df-43aa9f1de034}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="KeepBalancePower">
+      <UniqueIdentifier>{1242fc67-5b01-4656-afe8-3b3dbe0382d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OptimizeService">
+      <UniqueIdentifier>{097c5e05-8f85-4a62-ab37-4f15fe4919d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ShutdownSystem">
+      <UniqueIdentifier>{4bfafa6a-d43d-4fe4-91b9-fbb358e6c58a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="header.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="targetver.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Resource.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="KeepBalancePower.h">
+      <Filter>KeepBalancePower</Filter>
     </ClInclude>
     <ClInclude Include="CKeepAwake.h">
-      <Filter>头文件</Filter>
+      <Filter>KeepAwake</Filter>
     </ClInclude>
-    <ClInclude Include="RegistryOperation.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="OptimizeService.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="header.h">
+      <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="Common.h">
-      <Filter>头文件</Filter>
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="OptimizeService.h">
+      <Filter>OptimizeService</Filter>
     </ClInclude>
     <ClInclude Include="RegistryConfig.h">
-      <Filter>头文件</Filter>
+      <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="PowerLocker.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="RegistryOperation.h">
+      <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="ShutdownSystem.h">
+      <Filter>ShutdownSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ForbidShutDown.cpp">
-      <Filter>源文件</Filter>
+    <ClCompile Include="KeepBalancePower.cpp">
+      <Filter>KeepBalancePower</Filter>
     </ClCompile>
     <ClCompile Include="CKeepAwake.cpp">
-      <Filter>源文件</Filter>
+      <Filter>KeepAwake</Filter>
     </ClCompile>
     <ClCompile Include="OptimizeService.cpp">
-      <Filter>源文件</Filter>
+      <Filter>OptimizeService</Filter>
     </ClCompile>
-    <ClCompile Include="RegistryOperation.cpp">
-      <Filter>源文件</Filter>
+    <ClCompile Include="ShutdownSystem.cpp">
+      <Filter>ShutdownSystem</Filter>
     </ClCompile>
     <ClCompile Include="RegistryConfig.cpp">
-      <Filter>源文件</Filter>
+      <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="PowerLocker.cpp">
-      <Filter>源文件</Filter>
+    <ClCompile Include="RegistryOperation.cpp">
+      <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ForbidShutDown.rc">

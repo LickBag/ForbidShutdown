@@ -4,14 +4,17 @@
 #include "RegistryOperation.h"
 
 
-
 #define REGISTER_ROOT_PATH (_T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"))
 #define REGISTER_KEY (_T("ForbidShutDown"))
 
 #define REGISTER_SOFTWARE_PATH (_T("SOFTWARE\\ForbidShutDown"))
 #define REGISTER_BLOCK_WINDOWS_UPDATE_VALUE (_T("BlockWindowsUpdate"))
+#define REGISTER_KEEP_BALANCE_POWER_VALUE (_T("KeepBalancePower"))
+#define REGISTER_SHUTDOWN_SYSTEM_HOURS_VALUE (_T("ShutDownSystemHours"))
+#define REGISTER_SHUTDOWN_SYSTEM_MINUTES_VALUE (_T("ShutDownSystemMinutes"))
 
-bool IsBootUp()
+
+bool RegIsBootUp()
 {
 	bool bExist = false;
 
@@ -50,9 +53,8 @@ bool IsBootUp()
 	return bExist;
 }
 
-
 // 设置当前程序开机自启动
-void SetBootUp(bool bSet)
+void RegSetBootUp(bool bSet)
 {
 	// 找到系统的启动项 
 	HKEY hKey;
@@ -94,8 +96,7 @@ void SetBootUp(bool bSet)
 
 
 
-
-bool IsBlockWindowsUpdate()
+bool RegIsBlockWindowsUpdate()
 {
 //#ifdef _WIN64
 //    REGSAM regSam = KEY_WOW64_64KEY;
@@ -112,9 +113,56 @@ bool IsBlockWindowsUpdate()
     return false;
 }
 
-
-void SetIsBlockWindowsUpdate(bool block)
+void RegSetBlockWindowsUpdate(bool block)
 {
     DWORD dwData = block ? 1 : 0;
     SetRegDwordValue(HKEY_CURRENT_USER, 0, REGISTER_SOFTWARE_PATH, REGISTER_BLOCK_WINDOWS_UPDATE_VALUE, dwData);
+}
+
+
+
+bool RegIsKeepBalancePower()
+{
+	DWORD dwData = 0;
+	INT64 ret = GetRegDwordValue(HKEY_CURRENT_USER, 0, REGISTER_SOFTWARE_PATH, REGISTER_KEEP_BALANCE_POWER_VALUE, &dwData);
+	if (ret == ERROR_SUCCESS && dwData != 0)
+	{
+		return true;
+	}
+	return false;
+}
+
+void RegSetKeepBalancePower(bool keep)
+{
+	DWORD dwData = keep ? 1 : 0;
+	SetRegDwordValue(HKEY_CURRENT_USER, 0, REGISTER_SOFTWARE_PATH, REGISTER_KEEP_BALANCE_POWER_VALUE, dwData);
+}
+
+
+
+
+int RegGetShutdownSystemHours()
+{
+	DWORD dwData = 0;
+	GetRegDwordValue(HKEY_CURRENT_USER, 0, REGISTER_SOFTWARE_PATH, REGISTER_SHUTDOWN_SYSTEM_HOURS_VALUE, &dwData);
+	return dwData;
+}
+
+void RegSetShutdownSystemHours(int hours)
+{
+	DWORD dwData = hours;
+	SetRegDwordValue(HKEY_CURRENT_USER, 0, REGISTER_SOFTWARE_PATH, REGISTER_SHUTDOWN_SYSTEM_HOURS_VALUE, dwData);
+}
+
+int RegGetShutdownSystemMinutes()
+{
+	DWORD dwData = 0;
+	GetRegDwordValue(HKEY_CURRENT_USER, 0, REGISTER_SOFTWARE_PATH, REGISTER_SHUTDOWN_SYSTEM_MINUTES_VALUE, &dwData);
+	return dwData;
+}
+
+void RegSetShutdownSystemMinutes(int minutes)
+{
+	DWORD dwData = minutes;
+	SetRegDwordValue(HKEY_CURRENT_USER, 0, REGISTER_SOFTWARE_PATH, REGISTER_SHUTDOWN_SYSTEM_MINUTES_VALUE, dwData);
 }

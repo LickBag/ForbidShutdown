@@ -4,8 +4,8 @@
 #include "CKeepAwake.h"
 #include "RegistryConfig.h"
 #include "OptimizeService.h"
-#include "PowerLocker.h"
-
+#include "KeepBalancePower.h"
+#include "ShutdownSystem.h"
 
 // 添加MessageBoxTimeout支持
 extern "C"
@@ -24,7 +24,7 @@ extern "C"
 #define UM_TRAY_NOTIFY (WM_USER + WM_USER)
 #define UM_END 0xBFFE
 
-HINSTANCE hInst = nullptr;                             // 当前实例
+HINSTANCE g_hInst = nullptr;                             // 当前实例
 WCHAR szTitle[MAX_LOADSTRING] = { L"ForbidShutDown" }; // 标题栏文本
 WCHAR szWindowClass[MAX_LOADSTRING] = { L"ForbidShutDown" }; // 主窗口类名
 CKeepAwake* g_pKeepAwake = nullptr;
@@ -63,7 +63,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         return FALSE;
     }
 
-    LockBalancePower(true);
+    // 功能初始化
+    if (RegIsKeepBalancePower())
+    {
+        LockBalancePower(true);
+    }
+    InitShutdownSystem();
 
     MSG msg;
     while (GetMessage(&msg, nullptr, 0, 0))
@@ -74,6 +79,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     return (int)msg.wParam;
 }
+
 
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
@@ -100,7 +106,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-    hInst = hInstance; // 将实例句柄存储在全局变量中
+    g_hInst = hInstance; // 将实例句柄存储在全局变量中
 
     HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
@@ -120,6 +126,19 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 }
 
 
+void SetMenuText(HMENU hMenu, UINT itemID, WCHAR* newText)
+{
+    MENUITEMINFO mii;
+    mii.cbSize = sizeof(MENUITEMINFO);
+    mii.fMask = MIIM_TYPE;  // 设置菜单项类型
+    mii.fType = MFT_STRING; // 指定菜单项为文本类型
+    mii.dwTypeData = newText;  // 设置新的文本内容
+
+    // 修改菜单项文本
+    SetMenuItemInfo(hMenu, itemID, FALSE, &mii);
+}
+
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     POINT lpClickPoint;
@@ -133,7 +152,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             IconData.hWnd = (HWND)hWnd;
             IconData.uID = 0;
             IconData.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
-            IconData.hIcon = LoadIcon(hInst, MAKEINTRESOURCE(IDI_FORBIDSHUTDOWN));
+            IconData.hIcon = LoadIcon(g_hInst, MAKEINTRESOURCE(IDI_FORBIDSHUTDOWN));
             IconData.uCallbackMessage = UM_TRAY_NOTIFY;
             lstrcpy(IconData.szTip, L"避免休眠、禁用屏保、阻止关机、屏蔽更新");
             Shell_NotifyIcon(NIM_ADD, &IconData);
@@ -142,7 +161,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             g_pKeepAwake->Init(hWnd);
 
             // 屏蔽更新
-            if (IsBlockWindowsUpdate())
+            if (RegIsBlockWindowsUpdate())
             {
                 OptimizeService();
             }
@@ -154,29 +173,43 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             if (lParam == WM_RBUTTONDOWN)
             {
                 GetCursorPos(&lpClickPoint);
-                HMENU hMenu = LoadMenu(hInst, MAKEINTRESOURCE(IDR_TRAY_MENU));
+                HMENU hMenu = LoadMenu(g_hInst, MAKEINTRESOURCE(IDR_TRAY_MENU));
                 if (hMenu)
                 {
                     HMENU hSubMenu = GetSubMenu(hMenu, 0);
                     if (hSubMenu) 
 				    {
 					    // 勾选开机启动菜单
-					    if (IsBootUp())
+					    if (RegIsBootUp())
 					    {
 						    CheckMenuItem(hMenu, IDM_BOOT_UP, MF_BYCOMMAND | MF_CHECKED);
 					    }
                         
                         // 勾选屏蔽更新菜单
-                        if (IsBlockWindowsUpdate())
+                        if (RegIsBlockWindowsUpdate())
                         {
                             CheckMenuItem(hMenu, IDM_BLOCK_WINDOWS_UPDATE, MF_BYCOMMAND | MF_CHECKED);
                         }
 
-                        if (IsLockBalancePower())
+                        // 勾选锁定平衡方案
+                        if (RegIsKeepBalancePower())
                         {
                             CheckMenuItem(hMenu, IDM_LOCK_BALANCE_POWER, MF_BYCOMMAND | MF_CHECKED);
                         }
                     
+                        // 勾选启用自动关机
+                        if (IsEnableShutdownSystem())
+                        {
+                            CheckMenuItem(hMenu, IDM_ENABLE_SHUTDOWN, MF_BYCOMMAND | MF_CHECKED);
+                        }
+
+                        // 定时关机时间
+                        auto hour = RegGetShutdownSystemHours();
+                        auto minutes = RegGetShutdownSystemMinutes();
+                        WCHAR menuText[64]; 
+                        swprintf(menuText, ARRAYSIZE(menuText), TEXT("定时关机时间: %02d时%02d分"), hour, minutes);
+                        SetMenuText(hMenu, IDM_SET_SHUTDOWN, menuText);
+
 					    SetForegroundWindow(hWnd); // 避免菜单弹出后, 如果不点击则不消失的问题。
                         TrackPopupMenu(hSubMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_BOTTOMALIGN, lpClickPoint.x, lpClickPoint.y, 0, hWnd, NULL);
                     }
@@ -207,8 +240,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
 		    else if (LOWORD(wParam) == IDM_BOOT_UP)
 		    {
-			    bool bBookUp = !IsBootUp();
-			    SetBootUp(bBookUp);
+			    RegSetBootUp(!RegIsBootUp());
 		    }
 		    else if (LOWORD(wParam) == IDM_LINK)
 		    {
@@ -218,8 +250,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		    }
             else if (LOWORD(wParam) == IDM_BLOCK_WINDOWS_UPDATE)
             {
-                bool block = !IsBlockWindowsUpdate();
-                SetIsBlockWindowsUpdate(block);
+                bool block = !RegIsBlockWindowsUpdate();
+                RegSetBlockWindowsUpdate(block);
                 if (block)
                 {
                     OptimizeService();
@@ -231,9 +263,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
             else if (LOWORD(wParam) == IDM_LOCK_BALANCE_POWER)
             {
-                bool block = !IsLockBalancePower();
-                LockBalancePower(block);
+                LockBalancePower(!RegIsKeepBalancePower());
             }
+            else if (LOWORD(wParam) == IDM_ENABLE_SHUTDOWN)
+            {
+                EnableShutdownSystem(!IsEnableShutdownSystem());
+            }
+            else if (LOWORD(wParam) == IDM_SET_SHUTDOWN)
+            {
+                ShowSetShutdownSystemWindow(g_hInst);
+            }
+
             break;
         }
 
