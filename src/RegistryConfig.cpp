@@ -12,7 +12,7 @@
 #define REGISTER_KEEP_BALANCE_POWER_VALUE (_T("KeepBalancePower"))
 #define REGISTER_SHUTDOWN_SYSTEM_HOURS_VALUE (_T("ShutDownSystemHours"))
 #define REGISTER_SHUTDOWN_SYSTEM_MINUTES_VALUE (_T("ShutDownSystemMinutes"))
-
+#define REGISTER_SHUTDOWN_SCREEN_VALUE (_T("ShutdownScreen"))
 
 bool RegIsBootUp()
 {
@@ -94,6 +94,22 @@ void RegSetBootUp(bool bSet)
 	}
 }
 
+
+bool RegIsShutdownScreen()
+{
+	DWORD dwData = 1;
+	INT64 ret = GetRegDwordValue(HKEY_CURRENT_USER, 0, REGISTER_SOFTWARE_PATH, REGISTER_SHUTDOWN_SCREEN_VALUE, &dwData);
+	if (ret == ERROR_SUCCESS && dwData != 0)
+	{
+		return true;
+	}
+	return false;
+}
+void RegSetShutdownScreen(bool bSet)
+{
+	DWORD dwData = bSet ? 1 : 0;
+	SetRegDwordValue(HKEY_CURRENT_USER, 0, REGISTER_SOFTWARE_PATH, REGISTER_SHUTDOWN_SCREEN_VALUE, dwData);
+}
 
 
 bool RegIsBlockWindowsUpdate()

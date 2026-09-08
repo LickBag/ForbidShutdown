@@ -6,6 +6,12 @@ bool RegIsBootUp();
 void RegSetBootUp(bool bSet);
 
 
+// Win+L自动关闭显示器
+bool RegIsShutdownScreen();
+void RegSetShutdownScreen(bool bSet);
+
+
+
 // 阻止windows update
 bool RegIsBlockWindowsUpdate();
 void RegSetBlockWindowsUpdate(bool block);
