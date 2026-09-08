@@ -1,6 +1,8 @@
 ﻿#include "header.h"
 #include "Resource.h"
 #include <shellapi.h>
+#include <wtsapi32.h>
+#pragma comment(lib, "Wtsapi32.lib")
 #include "CKeepAwake.h"
 #include "RegistryConfig.h"
 #include "OptimizeService.h"
@@ -28,6 +30,8 @@ HINSTANCE g_hInst = nullptr;                             // 当前实例
 WCHAR szTitle[MAX_LOADSTRING] = { L"ForbidShutDown" }; // 标题栏文本
 WCHAR szWindowClass[MAX_LOADSTRING] = { L"ForbidShutDown" }; // 主窗口类名
 CKeepAwake* g_pKeepAwake = nullptr;
+// 是否已向系统注册会话通知（用于监控 Win+L 锁屏事件）
+bool g_bSessionNotificationRegistered = false;
 
 BOOL             InitInstance(HINSTANCE, int);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -119,10 +123,46 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     // 注册电源设置的变更通知
 
 
+    // 如果用户开启了 "Win+L 关闭显示器" 功能，则注册会话通知以监控锁屏事件
+    if (RegIsShutdownScreen())
+    {
+        // 注册当前窗口以接收会话变化通知（锁屏/解锁）
+        if (WTSRegisterSessionNotification(hWnd, NOTIFY_FOR_THIS_SESSION))
+        {
+            g_bSessionNotificationRegistered = true;
+        }
+    }
+
+
     ShowWindow(hWnd, nCmdShow);
     UpdateWindow(hWnd);
 
     return TRUE;
+}
+
+// 启用或禁用对锁屏(Win+L)的监控
+void UpdateShutdownScreenMonitoring(HWND hWnd, bool enable)
+{
+    if (enable)
+    {
+        if (!g_bSessionNotificationRegistered)
+        {
+            if (WTSRegisterSessionNotification(hWnd, NOTIFY_FOR_ALL_SESSIONS))
+            {
+                g_bSessionNotificationRegistered = true;
+            }
+        }
+    }
+    else
+    {
+        if (g_bSessionNotificationRegistered)
+        {
+            if (WTSUnRegisterSessionNotification(hWnd))
+            {
+                g_bSessionNotificationRegistered = false;
+            }
+        }
+    }
 }
 
 
@@ -154,7 +194,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             IconData.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
             IconData.hIcon = LoadIcon(g_hInst, MAKEINTRESOURCE(IDI_FORBIDSHUTDOWN));
             IconData.uCallbackMessage = UM_TRAY_NOTIFY;
-            lstrcpy(IconData.szTip, L"避免休眠、禁用屏保、阻止关机、屏蔽更新");
+            lstrcpy(IconData.szTip, L"避免休眠、禁用屏保、阻止关机、屏蔽更新、自动关闭显示器");
             Shell_NotifyIcon(NIM_ADD, &IconData);
 
             g_pKeepAwake = CKeepAwake::GetInstance();
@@ -164,6 +204,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             if (RegIsBlockWindowsUpdate())
             {
                 OptimizeService();
+            }
+
+            // 启用自动关闭显示器
+            if (RegIsShutdownScreen())
+            {
+                // 在 Create 时根据注册表设置开始监控 Win+L 锁屏事件
+                UpdateShutdownScreenMonitoring(hWnd, true);
             }
             break;
         }
@@ -201,6 +248,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         if (IsEnableShutdownSystem())
                         {
                             CheckMenuItem(hMenu, IDM_ENABLE_SHUTDOWN, MF_BYCOMMAND | MF_CHECKED);
+                        }
+
+						// 勾选启用Win+L自动关闭显示器
+                        if (RegIsShutdownScreen())
+                        {
+							CheckMenuItem(hMenu, IDM_SHUTDOWN_SCREEN, MF_BYCOMMAND | MF_CHECKED);
                         }
 
                         // 定时关机时间
@@ -242,6 +295,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		    {
 			    RegSetBootUp(!RegIsBootUp());
 		    }
+			else if (LOWORD(wParam) == IDM_SHUTDOWN_SCREEN)
+			{
+                bool newStatus = !RegIsShutdownScreen();
+                RegSetShutdownScreen(newStatus);
+                UpdateShutdownScreenMonitoring(hWnd, newStatus);
+			}
 		    else if (LOWORD(wParam) == IDM_LINK)
 		    {
 			    // system("rundll32 url.dll,FileProtocolHandler https://github.com/LickBag");
@@ -284,10 +343,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             NOTIFYICONDATA IconData = { 0 };
             IconData.cbSize = sizeof(NOTIFYICONDATA);
             IconData.hWnd = (HWND)hWnd;
-
             Shell_NotifyIcon(NIM_DELETE, &IconData);
 
+            // 注销会话通知（如果已注册）
+			UpdateShutdownScreenMonitoring(hWnd, false);
+
             PostQuitMessage(0);
+            break;
+        }
+
+        case WM_WTSSESSION_CHANGE:
+        {
+            // 监控会话锁事件（用户按 Win+L 或其他导致锁屏的动作）
+            if (wParam == WTS_SESSION_LOCK && g_bSessionNotificationRegistered)
+            {
+                // 发送关闭显示器的消息：SC_MONITORPOWER, 2 = 关闭
+                PostMessage(HWND_BROADCAST, WM_SYSCOMMAND, SC_MONITORPOWER, (LPARAM)2);
+            }
+            if (wParam == WTS_SESSION_UNLOCK && g_bSessionNotificationRegistered)
+            {
+                // 发送开启显示器的消息：SC_MONITORPOWER, 1 = 开启
+                PostMessage(HWND_BROADCAST, WM_SYSCOMMAND, SC_MONITORPOWER, (LPARAM)1);
+            }
             break;
         }
 
